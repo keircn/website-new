@@ -81,7 +81,7 @@ export function getCachedProfilePicture(
 ): ArrayBuffer | null {
 	const cache = profilePictureService.getCache();
 	if (!cache) return null;
-	return cache[theme] || cache.light || cache.dark;
+	return cache[theme];
 }
 
 export function getCachedBackgroundImage(
@@ -89,7 +89,7 @@ export function getCachedBackgroundImage(
 ): ArrayBuffer | null {
 	const cache = backgroundImageService.getCache();
 	if (!cache) return null;
-	return cache[theme] || cache.light || cache.dark;
+	return cache[theme];
 }
 
 export function getCachedBackgroundVideo(

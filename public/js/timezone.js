@@ -2,6 +2,7 @@ import { MAX_POLL_ATTEMPTS, POLL_INTERVAL, UI } from "./utils/constants.js";
 
 let timezoneData = null;
 let timezoneError = null;
+let timezoneUpdateInterval = null;
 
 const isBrowserLocale24h = () =>
 	!new Intl.DateTimeFormat(navigator.language, { hour: "numeric" })
@@ -102,10 +103,10 @@ function renderTimezoneWithTime(data) {
 	container.innerHTML = realContentHTML;
 
 	updateCurrentTime();
-	if (window.timezoneUpdateInterval) {
-		clearInterval(window.timezoneUpdateInterval);
+	if (timezoneUpdateInterval) {
+		clearInterval(timezoneUpdateInterval);
 	}
-	window.timezoneUpdateInterval = setInterval(
+	timezoneUpdateInterval = setInterval(
 		updateCurrentTime,
 		UI.TIMEZONE_UPDATE_INTERVAL,
 	);

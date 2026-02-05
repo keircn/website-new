@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import { file } from "bun";
 import { CONTENT_TYPE, ERROR_MESSAGES, HTTP_STATUS } from "#constants";
+import { processTemplate } from "#utils/template";
 
 export function createHTMLRouteHandler(filename: string) {
 	return async (): Promise<Response> => {
@@ -14,7 +15,8 @@ export function createHTMLRouteHandler(filename: string) {
 			});
 		}
 
-		return new Response(bunFile.stream(), {
+		const html = processTemplate(await bunFile.text());
+		return new Response(html, {
 			headers: { "Content-Type": CONTENT_TYPE.HTML },
 		});
 	};

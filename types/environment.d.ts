@@ -5,18 +5,18 @@ type Environment = {
 };
 
 type Audiobookshelf = {
-	url: string | false;
+	url: string | null;
 	token: string | null;
 	libraryIds: string[];
 };
 
 type TimezoneDB = {
-	url: string | false;
+	url: string | null;
 	id: string | null;
 };
 
 type GitLab = {
-	instanceUrl: string | false;
+	instanceUrl: string | null;
 	token: string | null;
 };
 
@@ -46,4 +46,13 @@ type AniList = {
 type LastFm = {
 	apiKey: string | null;
 	username: string | null;
+};
+
+type Offen = {
+	scriptUrl: string | null;
+	accountId: string | null;
+};
+
+type Site = {
+	name: string;
 };

@@ -6,24 +6,37 @@ import { CachedService } from "./base-cache";
 class TimezoneService extends CachedService<TimezoneData> {
 	protected async fetchData(): Promise<TimezoneData | null> {
 		if (!timezoneDB.url || !timezoneDB.id) {
-			echo.warn("TimezoneDB not configured, skipping timezone cache");
 			return null;
 		}
 
-		const baseUrl = normalizeUrl(timezoneDB.url);
-		const apiUrl = `${baseUrl}/get?id=${encodeURIComponent(timezoneDB.id)}`;
+		try {
+			const baseUrl = normalizeUrl(timezoneDB.url);
+			const apiUrl = `${baseUrl}/get?id=${encodeURIComponent(timezoneDB.id)}`;
 
-		const response = await fetch(apiUrl);
+			const response = await fetch(apiUrl);
 
-		if (!response.ok) {
-			throw new Error(`API responded with status ${response.status}`);
+			if (!response.ok) {
+				echo.warn(`TimezoneDB API error: ${response.status}`);
+				return null;
+			}
+
+			return await response.json();
+		} catch (error) {
+			echo.warn("TimezoneDB request failed:", error);
+			return null;
 		}
-
-		return await response.json();
 	}
 
 	protected getServiceName(): string {
 		return "timezone data";
+	}
+
+	public override start(): void {
+		if (!timezoneDB.url || !timezoneDB.id) {
+			echo.warn("TimezoneDB not configured, skipping cache");
+			return;
+		}
+		super.start();
 	}
 }
 

@@ -158,6 +158,36 @@ query ($username: String, $status: MediaListStatus) {
 }
 `;
 
+const ACTIVITY_QUERY = `
+query ($userId: Int, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activities(userId: $userId, sort: ID_DESC) {
+      ... on ListActivity {
+        id
+        status
+        progress
+        createdAt
+        media {
+          id
+          title {
+            romaji
+            english
+          }
+          coverImage {
+            medium
+          }
+        }
+      }
+      ... on TextActivity {
+        id
+        text
+        createdAt
+      }
+    }
+  }
+}
+`;
+
 async function graphqlRequest<T>(
 	query: string,
 	variables: Record<string, unknown>,
@@ -215,8 +245,12 @@ class AniListService extends CachedService<AniListData> {
 			const favouriteCharacters = user?.favourites?.characters?.nodes || [];
 
 			let following: AniListFollowing[] = [];
+			let activities: AniListActivity[] = [];
 			if (user?.id) {
-				following = await this.fetchFollowing(user.id);
+				[following, activities] = await Promise.all([
+					this.fetchFollowing(user.id),
+					this.fetchActivity(user.id),
+				]);
 			}
 
 			return {
@@ -228,6 +262,7 @@ class AniListService extends CachedService<AniListData> {
 				planToWatch,
 				favouriteCharacters,
 				following,
+				activities,
 				statistics: {
 					totalAnime: stats?.count || 0,
 					totalEpisodes: stats?.episodesWatched || 0,
@@ -273,6 +308,39 @@ class AniListService extends CachedService<AniListData> {
 		}>(FOLLOWING_QUERY, { userId, page: 1 });
 
 		return result?.Page?.following || [];
+	}
+
+	private async fetchActivity(userId: number): Promise<AniListActivity[]> {
+		const result = await graphqlRequest<{
+			Page: {
+				activities: Array<{
+					id: number;
+					status?: string;
+					progress?: string;
+					text?: string;
+					createdAt: number;
+					media?: {
+						id: number;
+						title: { romaji: string; english: string | null };
+						coverImage: { medium: string };
+					};
+				}>;
+			};
+		}>(ACTIVITY_QUERY, { userId, page: 1, perPage: 15 });
+
+		if (!result?.Page?.activities) {
+			return [];
+		}
+
+		return result.Page.activities.map((activity) => ({
+			id: activity.id,
+			type: activity.media ? "LIST" : "TEXT",
+			status: activity.status || null,
+			progress: activity.progress || null,
+			createdAt: activity.createdAt,
+			text: activity.text || null,
+			media: activity.media || null,
+		})) as AniListActivity[];
 	}
 
 	protected getServiceName(): string {

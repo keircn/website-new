@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import { CONTENT_TYPE } from "#constants";
 import { getCachedProjectLinks } from "#services/project-links";
+import { processTemplate } from "#utils/template";
 
 const routeDef: RouteDef = {
 	method: "GET",
@@ -92,7 +93,7 @@ async function handler(): Promise<Response> {
 		`<div class="full-page-contacts" id="projects-list">${projectsHtml}</div>`,
 	);
 
-	return new Response(html, {
+	return new Response(processTemplate(html), {
 		headers: { "Content-Type": CONTENT_TYPE.HTML },
 	});
 }

@@ -172,6 +172,25 @@ interface AniListUser {
 	};
 }
 
+interface AniListActivity {
+	id: number;
+	type: "LIST" | "TEXT" | "MESSAGE";
+	status: string | null;
+	progress: string | null;
+	createdAt: number;
+	text: string | null;
+	media: {
+		id: number;
+		title: {
+			romaji: string;
+			english: string | null;
+		};
+		coverImage: {
+			medium: string;
+		};
+	} | null;
+}
+
 interface AniListData {
 	user: AniListUser | null;
 	watching: AniListEntry[];
@@ -181,6 +200,7 @@ interface AniListData {
 	planToWatch: AniListEntry[];
 	favouriteCharacters: AniListCharacter[];
 	following: AniListFollowing[];
+	activities: AniListActivity[];
 	statistics: {
 		totalAnime: number;
 		totalEpisodes: number;

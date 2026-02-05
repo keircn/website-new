@@ -4,6 +4,7 @@ import { normalizeUrl } from "#utils/url";
 import { CachedService } from "./base-cache";
 
 const POLL_INTERVAL = 30 * 1000;
+const STALE_THRESHOLD = 2 * 60 * 1000;
 
 class AudiobookshelfListeningService extends CachedService<AudiobookListeningData> {
 	protected getServiceName(): string {
@@ -40,6 +41,12 @@ class AudiobookshelfListeningService extends CachedService<AudiobookListeningDat
 			}
 
 			const activeSession = sessions[0];
+
+			const updatedAt = activeSession.updatedAt || 0;
+			const now = Date.now();
+			if (now - updatedAt > STALE_THRESHOLD) {
+				return { isListening: false, book: null };
+			}
 
 			const coverUrl = activeSession.libraryItemId
 				? `${baseUrl}/api/items/${activeSession.libraryItemId}/cover`

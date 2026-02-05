@@ -4,6 +4,7 @@ const animeById = {};
 let allCompletedAnime = [];
 let animeCurrentPage = 1;
 const ANIME_PER_PAGE = 30;
+let activityData = [];
 
 fetch("/api/anilist/stats")
 	.then((response) => {
@@ -43,7 +44,19 @@ function updateAniListStats() {
 	const statsContainer = document.getElementById("anilist-stats");
 
 	if (anilistError) {
-		window.location.href = "/";
+		if (statsContainer) {
+			statsContainer.style.display = "block";
+			const errorDiv = document.createElement("div");
+			errorDiv.className = "error-message";
+			const title = document.createElement("h3");
+			title.textContent = "unable to load anime stats";
+			const message = document.createElement("p");
+			message.textContent = anilistError;
+			errorDiv.appendChild(title);
+			errorDiv.appendChild(message);
+			statsContainer.appendChild(errorDiv);
+			statsContainer.style.opacity = "1";
+		}
 		return;
 	}
 
@@ -96,6 +109,148 @@ function formatMediaType(format) {
 	};
 	return types[format] || format || "TV";
 }
+
+function formatActivityTime(timestamp) {
+	const now = Date.now();
+	const diff = now - timestamp * 1000;
+	const minutes = Math.floor(diff / 60000);
+	const hours = Math.floor(diff / 3600000);
+	const days = Math.floor(diff / 86400000);
+
+	if (minutes < 1) return "just now";
+	if (minutes < 60) return `${minutes}m ago`;
+	if (hours < 24) return `${hours}h ago`;
+	if (days < 7) return `${days}d ago`;
+	return new Date(timestamp * 1000).toLocaleDateString();
+}
+
+function formatActivityStatus(status) {
+	const statusMap = {
+		watched: "Watched",
+		completed: "Completed",
+		dropped: "Dropped",
+		paused: "Paused",
+		plans_to_watch: "Plans to watch",
+		rewatched: "Rewatched",
+	};
+	return statusMap[status?.toLowerCase()] || status || "Updated";
+}
+
+function renderActivityItem(activity) {
+	if (activity.type === "TEXT" && activity.text) {
+		return `
+			<div class="activity-item activity-text">
+				<div class="activity-text-content">${activity.text}</div>
+				<div class="activity-time">${formatActivityTime(activity.createdAt)}</div>
+			</div>
+		`;
+	}
+
+	if (activity.media) {
+		const title =
+			activity.media.title.english || activity.media.title.romaji || "Unknown";
+		const statusText = formatActivityStatus(activity.status);
+		const progressText = activity.progress ? ` ${activity.progress}` : "";
+
+		return `
+			<div class="activity-item activity-media" data-anime-id="${activity.media.id}">
+				<div class="activity-cover">
+					<img src="${activity.media.coverImage.medium}" alt="${title}" loading="lazy" onerror="this.style.display='none'">
+				</div>
+				<div class="activity-content">
+					<div class="activity-status">${statusText}${progressText}</div>
+					<div class="activity-title">${title}</div>
+					<div class="activity-time">${formatActivityTime(activity.createdAt)}</div>
+				</div>
+			</div>
+		`;
+	}
+
+	return "";
+}
+
+function createActivityModal() {
+	if (document.getElementById("activity-modal-overlay")) return;
+
+	const modalHTML = `
+		<div id="activity-modal-overlay" class="activity-modal-overlay">
+			<div class="activity-modal">
+				<div class="activity-modal-header">
+					<h3>recent activity</h3>
+					<button class="activity-modal-close" onclick="closeActivityModal()">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M18 6L6 18M6 6l12 12"/>
+						</svg>
+					</button>
+				</div>
+				<div id="activity-list" class="activity-list"></div>
+			</div>
+		</div>
+	`;
+
+	document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+	const overlay = document.getElementById("activity-modal-overlay");
+	overlay.addEventListener("click", (e) => {
+		if (e.target === overlay) {
+			closeActivityModal();
+		}
+	});
+
+	document.addEventListener("keydown", (e) => {
+		if (e.key === "Escape") {
+			closeActivityModal();
+		}
+	});
+}
+
+function createActivityFab(count) {
+	if (document.getElementById("activity-fab")) return;
+
+	const fabHTML = `
+		<button id="activity-fab" class="activity-fab" onclick="openActivityModal()">
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+			</svg>
+			${count > 0 ? `<span class="activity-fab-badge">${count}</span>` : ""}
+		</button>
+	`;
+
+	document.body.insertAdjacentHTML("beforeend", fabHTML);
+}
+
+function openActivityModal() {
+	const overlay = document.getElementById("activity-modal-overlay");
+	const list = document.getElementById("activity-list");
+
+	if (!overlay || !list) return;
+
+	list.innerHTML = activityData.map((a) => renderActivityItem(a)).join("");
+
+	list.querySelectorAll(".activity-item.activity-media").forEach((item) => {
+		item.addEventListener("click", () => {
+			const animeId = item.dataset.animeId;
+			if (animeId) {
+				closeActivityModal();
+				showAnimeModal(Number.parseInt(animeId, 10));
+			}
+		});
+	});
+
+	overlay.classList.add("active");
+	document.body.style.overflow = "hidden";
+}
+
+function closeActivityModal() {
+	const overlay = document.getElementById("activity-modal-overlay");
+	if (overlay) {
+		overlay.classList.remove("active");
+		document.body.style.overflow = "";
+	}
+}
+
+window.openActivityModal = openActivityModal;
+window.closeActivityModal = closeActivityModal;
 
 function formatSource(source) {
 	if (!source) return null;
@@ -717,22 +872,6 @@ function renderAniListStats(data) {
 		}
 
 		${
-			data.dropped && data.dropped.length > 0
-				? `
-		<div class="all-anime">
-			<div class="section-header">
-				<h4>dropped</h4>
-				<span class="section-count">(${data.dropped.length})</span>
-			</div>
-			<div class="anime-grid">
-				${data.dropped.map((item) => renderAnimeGridItem(item)).join("")}
-			</div>
-		</div>
-		`
-				: ""
-		}
-
-		${
 			data.planToWatch && data.planToWatch.length > 0
 				? `
 		<div class="all-anime">
@@ -747,6 +886,22 @@ function renderAniListStats(data) {
 						renderAnimeGridItem(item, { showScore: false, showDate: false }),
 					)
 					.join("")}
+			</div>
+		</div>
+		`
+				: ""
+		}
+
+		${
+			data.dropped && data.dropped.length > 0
+				? `
+		<div class="all-anime">
+			<div class="section-header">
+				<h4>dropped</h4>
+				<span class="section-count">(${data.dropped.length})</span>
+			</div>
+			<div class="anime-grid">
+				${data.dropped.map((item) => renderAnimeGridItem(item)).join("")}
 			</div>
 		</div>
 		`
@@ -820,6 +975,12 @@ function renderAniListStats(data) {
 	allCompletedAnime = data.completed;
 	animeCurrentPage = 1;
 	renderAnimePage();
+
+	if (data.activities && data.activities.length > 0) {
+		activityData = data.activities;
+		createActivityModal();
+		createActivityFab(data.activities.length);
+	}
 }
 
 function renderAnimePage() {

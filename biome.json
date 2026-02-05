@@ -62,5 +62,10 @@
 			"lineEnding": "lf",
 			"semicolons": "always"
 		}
+	},
+	"html": {
+		"parser": {
+			"interpolation": true
+		}
 	}
 }

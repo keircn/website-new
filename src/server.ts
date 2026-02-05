@@ -10,6 +10,7 @@ import {
 import { CONTENT_TYPE, HTTP_STATUS } from "#constants";
 import { environment } from "#environment";
 import { reqLoggerIgnores } from "#environment/constants";
+import { processTemplate } from "#utils/template";
 
 class ServerHandler {
 	private router: FileSystemRouter;
@@ -378,7 +379,8 @@ class ServerHandler {
 			const notFoundFile = Bun.file(notFoundPath);
 
 			if (await notFoundFile.exists()) {
-				response = new Response(notFoundFile.stream(), {
+				const html = processTemplate(await notFoundFile.text());
+				response = new Response(html, {
 					status: HTTP_STATUS.NOT_FOUND,
 					headers: { "Content-Type": CONTENT_TYPE.HTML },
 				});
