@@ -22,11 +22,15 @@ type GitLab = {
 
 type SiteImages = {
 	profilePicture: {
-		light: string | null;
+		light: null;
 		dark: string | null;
 	};
 	background: {
-		light: string | null;
+		light: null;
+		dark: string | null;
+	};
+	backgroundVideo: {
+		light: null;
 		dark: string | null;
 	};
 };

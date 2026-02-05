@@ -33,6 +33,7 @@ export const CONTENT_TYPE = {
 	PNG: "image/png",
 	OCTET_STREAM: "application/octet-stream",
 	FONT_OTF: "font/otf",
+	MP4: "video/mp4",
 } as const;
 
 export const CACHE_CONTROL = {

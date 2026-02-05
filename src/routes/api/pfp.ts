@@ -9,8 +9,7 @@ const routeDef: RouteDef = {
 };
 
 async function handler(request: ExtendedRequest): Promise<Response> {
-	const theme = request.query.theme === "dark" ? "dark" : "light";
-	const cachedImageBuffer = getCachedProfilePicture(theme);
+	const cachedImageBuffer = getCachedProfilePicture("dark");
 	return handleCachedBinaryResponse(
 		cachedImageBuffer,
 		"Profile picture",

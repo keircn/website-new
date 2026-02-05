@@ -63,22 +63,18 @@
 		}
 	};
 
-	const applyTheme = (isDaytime) => {
-		const theme = isDaytime ? "white" : "dark";
-		const colorScheme = isDaytime ? "light" : "dark";
-		const apiTheme = isDaytime ? "light" : "dark";
-
-		document.documentElement.setAttribute("data-theme", theme);
+	const applyTheme = () => {
+		document.documentElement.setAttribute("data-theme", "dark");
 
 		const meta = document.querySelector('meta[name="color-scheme"]');
 		if (meta) {
-			meta.setAttribute("content", colorScheme);
+			meta.setAttribute("content", "dark");
 		}
 
 		const updateImages = () => {
 			const pfp = document.querySelector(".hero-pfp");
 			if (pfp) {
-				pfp.src = `/api/pfp?theme=${apiTheme}`;
+				pfp.src = "/api/pfp";
 			}
 		};
 
@@ -90,9 +86,7 @@
 	};
 
 	const getMode = () => {
-		const stored = localStorage.getItem(STORAGE_KEY);
-		if (stored && MODES.includes(stored)) return stored;
-		return "website";
+		return "dark";
 	};
 
 	const updateToggleButton = (mode) => {
@@ -156,8 +150,7 @@
 		document.body.appendChild(btn);
 	};
 
-	const mode = getMode();
-	applyTheme(resolveTheme(mode));
+	applyTheme();
 
 	window
 		.matchMedia("(prefers-color-scheme: dark)")

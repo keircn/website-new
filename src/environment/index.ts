@@ -28,12 +28,16 @@ const gitlab: GitLab = {
 
 const siteImages: SiteImages = {
 	profilePicture: {
-		light: process.env.PROFILE_PICTURE_LIGHT || null,
+		light: null,
 		dark: process.env.PROFILE_PICTURE_DARK || null,
 	},
 	background: {
-		light: process.env.BACKGROUND_IMAGE_LIGHT || null,
+		light: null,
 		dark: process.env.BACKGROUND_IMAGE_DARK || null,
+	},
+	backgroundVideo: {
+		light: null,
+		dark: process.env.BACKGROUND_VIDEO_DARK || null,
 	},
 };
 

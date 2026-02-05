@@ -71,6 +71,10 @@ const backgroundImageService = new ImageCacheService(
 	"background image",
 	() => siteImages.background,
 );
+const backgroundVideoService = new ImageCacheService(
+	"background video",
+	() => siteImages.backgroundVideo,
+);
 
 export function getCachedProfilePicture(
 	theme: "light" | "dark",
@@ -88,7 +92,16 @@ export function getCachedBackgroundImage(
 	return cache[theme] || cache.light || cache.dark;
 }
 
+export function getCachedBackgroundVideo(
+	theme: "light" | "dark",
+): ArrayBuffer | null {
+	const cache = backgroundVideoService.getCache();
+	if (!cache) return null;
+	return cache[theme] || cache.light || cache.dark;
+}
+
 export function startImageCaches(): void {
 	profilePictureService.start();
 	backgroundImageService.start();
+	backgroundVideoService.start();
 }
